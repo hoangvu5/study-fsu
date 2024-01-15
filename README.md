@@ -1,7 +1,8 @@
 # study@fsu
-
 ![](./demo_img/demo1.png "My Groups")
 ![](./demo_img/demo2.png "My Chat")
+
+[Link to demo video](https://youtu.be/IU5q7DMfWRQ)
 
 ### Introduction
 study@fsu is a web application that allows students in Florida State University to find and participate in public study groups.
