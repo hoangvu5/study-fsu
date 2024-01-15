@@ -47,7 +47,7 @@ class Message(models.Model):
     
     def serialize(self):
         # Get sender's profile picture's URL
-        if self.sender.profile_pic != None:
+        if self.sender.profile_pic:
             profile_pic_url = self.sender.profile_pic.url
         else:
             profile_pic_url = None

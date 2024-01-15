@@ -31,10 +31,6 @@ class ChatConsumer(WebsocketConsumer):
         group_id = int(data['gid'])
         sender = User.objects.get(id=sender_id)
         group = Group.objects.get(id=group_id)
-        if sender.profile_pic != None:
-            profile_pic_url = sender.profile_pic.url
-        else:
-            profile_pic_url = None
 
         # Create Message object
         message = Message.objects.create(
