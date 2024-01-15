@@ -1,0 +1,5 @@
+@media (min-width: 576px) {
+    #login-form-div {
+        width: 400px;
+    }
+}

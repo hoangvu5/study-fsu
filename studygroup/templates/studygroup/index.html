@@ -1,0 +1,29 @@
+{% extends 'studygroup/layout.html' %}
+
+{% block body %}
+    <div class="container">
+        <div id="welcome-div" class="mt-3">
+            {% if user.is_authenticated %}
+                <h3>Welcome, {{user.username}}!</h3>
+            {% else %}
+                <h3>Welcome to <a href="{% url 'index' %}" class="fw-bold text-danger" style="text-decoration: none;">study@fsu</a>!</h3>
+            {% endif %}
+            <p>Find your study group today!</p>
+
+            <h4>Quick Start</h4>
+            <p><strong>Create a study group and meet new people IRL!</strong></p>
+            <ul>
+                <li>Your study group is public to the world!</li>
+                <li>You can set your starting and ending time of your study group's meeting.</li>
+                <li>You can reset your meeting time once it is over.</li>
+            </ul>
+            <p><strong>Open your network!</strong></p>
+            <ul>
+                <li>Communicate with your study mates for a meeting location!</li>
+                <li>Add your meetings to Google Calendar or Outlook!</li>
+                <li>Change your profile picture to mark your style!</li>
+                <li>Note: All the time are being set at UTC-5.</li>
+            </ul>
+        </div>
+    </div>
+{% endblock %}

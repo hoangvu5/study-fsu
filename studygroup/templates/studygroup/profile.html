@@ -1,0 +1,24 @@
+{% extends 'studygroup/layout.html' %}
+
+{% block title %} - Profile {% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row" style="align-items: center; height: 80vh;">
+        <div class="col-sm-auto mx-auto" id="login-form-div">
+            <h3>Settings</h3>
+            <form action="{% url 'profile' %}" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="profile_pic">Your profile picture: </label>
+                    <input type="file" id="profile_pic" name="profile_pic" accept="image/*">
+                </div>
+                <br>
+                <div class="d-flex justify-content-end text-center">
+                    <input class="btn btn-primary " type="submit" value="Save">
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

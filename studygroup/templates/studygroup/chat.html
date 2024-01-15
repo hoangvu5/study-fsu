@@ -1,0 +1,146 @@
+{% extends 'studygroup/layout.html' %}
+
+{% block title %} - Chat {% endblock %}
+
+{% block body %}
+    <div id="chatarea">
+        <h4 class="mb-2">My Chat</h4>
+        <div id="sidebar" class="overflow-x-auto" style="white-space: nowrap; transform: rotateX(180deg);">
+            
+            {% for group in groups %}
+                <div class="btn btn-secondary rounded-bottom-0" id="chat-group-{{group.id}}" style="transform: rotateX(180deg); width: 200px;" onclick="openChatDiv(this);" data-gid="{{group.id}}">
+                    <h6 style="overflow-x: hidden; text-overflow: ellipsis; white-space: nowrap;"><strong>{{group.name}}</strong></h6>
+                    <strong>Users: </strong>
+                    {% if group.current_size >= 1 %}{% with group.participants.all|first as first_obj %}{{first_obj.username}}{% endwith %}{% endif %}{% if group.current_size >= 2 %}{% with group.participants.all|slice:"1:2"|first as second_obj %}, {{second_obj.username}}{% endwith %}{% endif %}{% if group.current_size >= 3 %}& {{group.current_size|add:-2}} others{% endif %}
+                    
+                </div>
+            {% endfor %}
+        </div>
+        <div id="mainbar">
+            {% if groups %}
+                <div id="chat-div" class="overflow-y-auto pt-3 px-2 rounded-bottom-3" style="height: 70vh; border: 1px solid #dee2e6;">
+                    
+                </div>
+                <div class="pt-1" id="chat-form-div" style="display: none;">
+                    <form id="chat-form" data-uid="{{user.id}}" data-gid="1">
+                        {% csrf_token %}
+                        <div class="input-group">
+                            <input class="form-control rounded-start-3" id="message-box" type="text" name="message" autocomplete="off" placeholder="Message...">    
+                            <input class="btn btn-primary rounded-end-3" type="submit" value="Send">
+                        </div>
+                    </form>
+                </div>
+            {% else %}
+                (no groups)
+            {% endif %}
+        </div>
+    </div>
+
+    
+
+    <script>
+        var sockets = {};
+        function openChatDiv(chat_group) {
+
+            document.querySelector('#chat-form-div').style.display = 'block';
+
+            // Render chat_message_div from JSON
+            function renderMessage(message) {
+                chat_message_div = document.createElement('div');
+                // Get profile picture
+                if (message['profile_pic_url'] != null) {
+                    var profile_pic_url = message['profile_pic_url'];
+                } else {
+                    var profile_pic_url = "https://t4.ftcdn.net/jpg/02/15/84/43/360_F_215844325_ttX9YiIIyeaR7Ne6EaLLjMAmy4GvPC69.jpg";
+                }
+                
+                chat_message_div.innerHTML = `
+                    <div class="d-flex flex-row align-items-center mt-1">
+                        <img src=${profile_pic_url} class="rounded-circle me-2" width="28" height="28" alt="">
+                        <strong>${message['sender']}</strong>
+                    </div>
+                    <div class="d-flex flex-row mt-1">
+                        <span class="me-auto">${message['value']}</span>
+                        <small class="text-body-secondary text-end" style="min-width:120px;">${message['timestamp']}</small>
+                    </div>
+                `;
+                return chat_message_div;
+            }
+
+            const gid = chat_group.dataset.gid;
+
+            // Open socket when a group is chosen
+            const socket = new WebSocket('ws://' + window.location.host + 
+            '/ws/socket-server/' + gid + '/');
+            sockets[gid] = socket;
+
+            // Fetch recent messages when open socket
+            socket.onopen = function(e) {
+                socket.send(JSON.stringify({
+                    'gid': gid,
+                    'commands': 'fetch_messages'
+                }));
+            }
+
+            socket.onclose = function(e) {
+                console.error('Chat socket closed unexpectedly');
+            }
+
+            // Handle different commands
+            socket.onmessage = function(e) {
+                // Append to chat_div
+                let chat_div = document.querySelector('#chat-div');
+                
+                var data = JSON.parse(e.data);
+
+                if (data['command'] === 'messages') {
+                    chat_div.innerHTML = "";
+                }
+
+                if (data['command'] === 'messages') {
+                    for (let i = 0; i < data['messages'].length; i++) {
+                        chat_div.appendChild(renderMessage(data['messages'][i]));
+                    }
+                }
+                else if (data['command'] === 'new_message') {
+                    chat_div.appendChild(renderMessage(data['message']));
+                }
+
+                // Set chat_div to bottom chat
+                if (data['command'] === 'messages' || 
+                (data['command'] === 'new_message' && chat_div.scrollTop + chat_div.clientHeight === chat_div.scrollHeight)) {
+                    chat_div.scrollTop = chat_div.scrollHeight;
+                }
+            }
+
+            // Change form's gid
+            const form_div = document.querySelector('#chat-form');
+            form_div.dataset.gid = gid;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Send request
+            let form = document.querySelector('#chat-form');
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+
+                // Get information from form
+                let message = form.message.value;
+                let uid = form.dataset.uid;
+                let gid = form.dataset.gid;
+
+                let socket = sockets[gid];
+
+                // Send to server
+                socket.send(JSON.stringify({
+                    'message': message,
+                    'uid': uid,
+                    'gid': gid,
+                    'commands': 'new_message'
+                }));
+                form.reset();
+            });
+        });
+    </script>
+        
+{% endblock %}

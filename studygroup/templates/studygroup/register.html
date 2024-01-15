@@ -1,0 +1,43 @@
+{% extends 'studygroup/layout.html' %}
+
+{% block title %} - Sign Up {% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="row" style="align-items: center; height: 80vh;">
+            <div class="col-sm-auto mx-auto" id="login-form-div">
+                <form action="{% url 'register' %}" method="post">
+                    {% csrf_token %}
+                    <div class="form-floating">
+                        <input autofocus class="form-control" id="username" type="text" name="username" placeholder="Username" required="required">
+                        <label for="username">Username</label>
+                    </div>
+                    <br>
+                    <div class="form-floating">
+                        <input autofocus class="form-control" id="email" type="email" name="email" placeholder="E-mail address" required="required">
+                        <label for="email">Email</label>
+                    </div>
+                    <br>
+                    <div class="form-floating">
+                        <input class="form-control" id="password" type="password" name="password" placeholder="Password" required="required">
+                        <label for="password">Password</label>
+                    </div>
+                    <br>
+                    <div class="form-floating">
+                        <input class="form-control" id="confirmation" type="password" name="confirmation" placeholder="Confirm password" required="required">
+                        <label for="confirmation">Confirmation</label>
+                    </div>
+                    <br>
+                    <div class="text-center">
+                        <input class="btn btn-primary" type="submit" value="Sign Up" style="width: 100%;">
+                    </div>
+                </form>
+
+                <div class="text-center" id="login-redirect" style="margin-top: 10px;">
+                    Have an account? <a href="{% url 'login' %}">Sign In</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

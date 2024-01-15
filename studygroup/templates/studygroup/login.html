@@ -1,0 +1,33 @@
+{% extends 'studygroup/layout.html' %}
+
+{% block title %} - Sign In {% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="row" style="align-items: center; height: 80vh;">
+            <div class="col-sm-auto mx-auto" id="login-form-div">
+                <form action="{% url 'login' %}" method="post">
+                    {% csrf_token %}
+                    <div class="form-floating">
+                        <input autofocus class="form-control" id="username" type="text" name="username" placeholder="Username" required="required">
+                        <label for="username">Username</label>
+                    </div>
+                    <br>
+                    <div class="form-floating">
+                        <input class="form-control" id="password" type="password" name="password" placeholder="Password" required="required">
+                        <label for="password">Password</label>
+                    </div>
+                    <br>
+                    <div class="text-center">
+                        <input class="btn btn-primary" type="submit" value="Sign In" style="width: 100%;">
+                    </div>
+                </form>
+
+                <div class="text-center" id="register-redirect" style="margin-top: 10px;">
+                    Don't have an account? <a href="{% url 'register' %}">Sign Up</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

@@ -1,0 +1,271 @@
+{% extends 'studygroup/layout.html' %}
+
+{% block title %} - My Groups {% endblock %}
+
+{% block body %}
+    <div class="container">
+        <a role="button" href="{% url 'create' %}" class="btn btn-primary text-center mb-3 mt-3" style="width:100%;">Create Group +</a>
+
+        <h3 class="mb-3">Owned Groups</h3>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+            {% for group in owned_groups %}
+                <div class="cols" id="group-div-{{group.id}}">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title overflow-hidden" style="text-overflow: ellipsis; white-space: nowrap; height:25px;">{{ group.name }}</h5>
+                            <p class="card-text overflow-hidden" style="text-overflow: ellipsis; height: 100px;">
+                                {{ group.description }}
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#view-{{group.id}}">View</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#edit-{{group.id}}" >Edit</button>
+                                </div>
+                                <small class="text-body-secondary group-start-small-text" data-start="{{group.start.isoformat}}" data-end="{{group.end.isoformat}}">null</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="cols" id="group-div">
+                    (no owned groups)
+                </div>
+            {% endfor %}
+        </div>
+
+        <h3 class="mb-3 mt-3">Joined Groups</h3>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+            {% for group in page_obj %}
+                <div class="cols" id="group-div">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title overflow-hidden" style="text-overflow: ellipsis; white-space: nowrap; height:25px;">{{ group.name }}</h5>
+                            <p class="card-text overflow-hidden" style="text-overflow: ellipsis; height: 100px;">
+                                {{ group.description }}
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary">View</button>
+                                    {% if user != group.creator %}
+                                        <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" 
+                                        data-bs-target="#{% if user not in group.participants.all %}join{% else %}leave{% endif %}-{{group.id}}"
+                                        id="card-btn-{% if user not in group.participants.all %}join{% else %}leave{% endif %}-{{group.id}}">
+                                            {% if user not in group.participants.all %}    
+                                                Join
+                                            {% else %}
+                                                Leave
+                                            {% endif %}
+                                        </button>
+                                    {% endif %}
+                                    {% if user == group.creator %}
+                                        <button type="button" class="btn btn-sm btn-outline-secondary">Edit</button>
+                                    {% endif %}
+                                </div>
+                                <small class="text-body-secondary group-start-small-text" data-start="{{group.start.isoformat}}" data-end="{{group.end.isoformat}}">null</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="cols" id="group-div">
+                    (no group)
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% for group in owned_groups %}
+        <div class="modal" id="view-{{group.id}}">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title overflow-x-hidden" style="text-overflow: ellipsis; white-space: nowrap;" id="view-{{group.id}}-name">{{group.name}}</h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <h6>Description</h6>
+                        <p class="modal-text" id="view-{{group.id}}-description">{{group.description}}</p>
+                        <h6>Information</h6>
+                        <p class="modal-text">
+                            Capacity: <span id="view-{{group.id}}-current-size">{{group.current_size}}</span> / <span id="view-{{group.id}}-max-size">{{group.max_size}}</span>
+                        </p>
+                        <p class="modal-text">Starting: <span id="view-{{group.id}}-start">{{group.start}}</span></p>
+                        <p class="modal-text">Ending: <span id="view-{{group.id}}-end">{{group.end}}</span></p>
+                        <add-to-calendar-button
+                            name="{{group.name}} Meeting"
+                            options="'Google','Outlook.com','Apple'"
+                            startDate="{{group.start|date:'Y-m-d'}}"
+                            endDate="{{group.end|date:'Y-m-d'}}"
+                            startTime="{{group.start|date:'H:i'}}"
+                            endTime="{{group.end|date:'H:i'}}"
+                            location="Worldwide"
+                            timeZone="America/Bogota"
+                        ></add-to-calendar-button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" id="edit-{{group.id}}">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Edit</h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="edit-form-{{group.id}}" onsubmit="return editGroup(this);" data-gid="{{group.id}}">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label class="form-label" for="name">Name <span class="text-danger">*</span></label>
+                                <input class="form-control" autofocus type="text" id="name" required="required" minlength="2" maxlength="32" name="name" value="{{group.name}}" autocomplete="off"> 
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="description">Description</label>
+                                <textarea class="form-control" rows="5" type="text" id="description" maxlength="256" name="description" style="resize: none;" autocomplete="off">{{group.description}}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="max-size">Maximum Participants <span class="text-danger">*</span></label>
+                                <input class="form-control" type="number" id="max-size" min="1" max="20" step="1" default="1" required="required" name="max_size" value="{{group.max_size}}"> 
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <div class="form-group">
+                                        <label class="form-label" for="start">Starting <span class="text-danger">*</span></label>
+                                        <input class="form-control" type="datetime-local" id="start" required="required" name="start" value="{{group.start|date:'Y-m-d\TH:i'}}"> 
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="form-group">
+                                        <label class="form-label" for="end">Ending <span class="text-danger">*</span></label>
+                                        <input class="form-control" type="datetime-local" id="end" required="required" name="end" value="{{group.end|date:'Y-m-d\TH:i'}}"> 
+                                    </div>
+                                </div>
+                            </div>
+                            <input class="btn btn-primary mt-2" type="submit" value="Edit"">
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% endfor %}
+
+    {% for group in page_obj %}
+        <div class="modal" id="view-{{group.id}}">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title overflow-x-hidden" style="text-overflow: ellipsis; white-space: nowrap;" id="view-{{group.id}}-name">{{group.name}}</h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <h6>Description</h6>
+                        <p class="modal-text" id="view-{{group.id}}-description">{{group.description}}</p>
+                        <h6>Information</h6>
+                        <p class="modal-text">
+                            Capacity: <span id="view-{{group.id}}-current-size">{{group.current_size}}</span> / <span id="view-{{group.id}}-max-size">{{group.max_size}}</span>
+                        </p>
+                        <p class="modal-text">Starting: <span id="view-{{group.id}}-start">{{group.start}}</span></p>
+                        <p class="modal-text">Ending: <span id="view-{{group.id}}-end">{{group.end}}</span></p>
+                        <add-to-calendar-button
+                            name="{{group.name}} Meeting"
+                            options="'Google','Outlook.com','Apple'"
+                            startDate="{{group.start|date:'Y-m-d'}}"
+                            endDate="{{group.end|date:'Y-m-d'}}"
+                            startTime="{{group.start|date:'H:i'}}"
+                            endTime="{{group.end|date:'H:i'}}"
+                            location="Worldwide"
+                            timeZone="America/Bogota"
+                        ></add-to-calendar-button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="modal" id="join-{{group.id}}">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Confirmation</h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+            
+                    <div class="modal-body">
+                        Do you want to join <strong>{{group.name}}</strong>?
+                    </div>
+            
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" onclick="joinGroup(this);" data-gid="{{group.id}}" data-bs-dismiss="modal">Yes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" id="leave-{{group.id}}">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Confirmation</h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+            
+                    <div class="modal-body">
+                        Do you want to leave <strong>{{group.name}}</strong>?
+                    </div>
+            
+                    <div class="modal-footer">
+                        <button class="btn btn-danger" onclick="leaveGroup(this);" data-gid="{{group.id}}" data-bs-dismiss="modal">Yes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    
+    <ul class="pagination justify-content-center mt-3">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                    Previous
+                </a>
+            </li>
+        {% endif %}
+        {% if numbers|length > 1 %}
+            {% for number in numbers %}
+                {% if page_obj.number == number %}
+                    <li class="page-item"><a class="page-link">{{ number }}</a></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link" href="?page={{ number }}">{{ number }}</a></li>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                    Next
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var now = new Date();
+            var datetimeLocal = fromDateToString(now);
+
+            document.querySelectorAll('#start').forEach(element => {
+                element.min = datetimeLocal;
+            });
+            document.querySelectorAll('#end').forEach(element => {
+                element.min = datetimeLocal;
+            });
+            
+            // Update timer of each card
+            updateTimerAll();
+            setInterval(updateTimerAll, 60000);
+
+        });
+    </script>
+
+{% endblock %}

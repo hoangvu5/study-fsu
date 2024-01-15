@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-beta1/css/bootstrap.min.css" rel="stylesheet">
+    <title>Chatbox</title>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-4">
+                <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar" aria-expanded="false" aria-controls="sidebar">
+                    Toggle Group Chats
+                </button>
+                <div class="collapse" id="sidebar">
+                    <div class="list-group">
+                        <a href="#" class="list-group-item list-group-item-action">Group Chat 1</a>
+                        <a href="#" class="list-group-item list-group-item-action">Group Chat 2</a>
+                        <!-- Add more group chats as needed -->
+                    </div>
+                </div>
+            </div>
+            <div class="col-8">
+                <div class="card">
+                    <div class="card-body" id="chatbox">
+                        <!-- Messages will be added here dynamically -->
+                    </div>
+                    <div class="card-footer">
+                        <input type="text" id="messageInput" class="form-control" placeholder="Enter your message here">
+                        <button id="sendButton" class="btn btn-primary mt-2">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-beta1/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('sendButton').addEventListener('click', function() {
+            var messageInput = document.getElementById('messageInput');
+            var chatbox = document.getElementById('chatbox');
+            var message = document.createElement('p');
+            message.textContent = 'You: ' + messageInput.value;
+            chatbox.appendChild(message);
+            messageInput.value = '';
+        });
+    </script>
+</body>
+</html>
